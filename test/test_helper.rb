@@ -31,7 +31,7 @@ class ShippingCompany < A
   has_many :employees, through: :offices # A → A
 
   has_many :docks # B
-  has_many :ships, through: :docks, split: true # B → C
+  has_many :ships, through: :docks, split: true, batch_size: 10 # B → C
   has_many :whistles, through: :ships, split: true # C → A
 end
 

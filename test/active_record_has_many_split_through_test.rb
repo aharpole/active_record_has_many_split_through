@@ -71,12 +71,26 @@ class ActiveRecordHasManySplitThroughTest < Minitest::Test
     assert_equal 3, @company.whistles.count
   end
 
+  # lots of stuff
+
+  def test_lots_of_records
+    100.times do |n|
+      dock = @company4.docks.create!(name: "Dock #{n}")
+      100.times do |j|
+        dock.ships.create!(name: "Ship #{j}")
+      end
+    end
+
+    assert_equal 10_000, @company4.ships.count
+  end
+
   private
 
   def create_fixtures
     @company = ShippingCompany.create!(name: "GitHub")
     @company2 = ShippingCompany.create!(name: "Microsoft")
     @company3 = ShippingCompany.create!(name: "Wunderlist")
+    @company4 = ShippingCompany.create!(name: "Big lots!")
 
     @office = @company.offices.create!(name: "Back Office")
     @office2 = @company.offices.create!(name: "Front Office")
