@@ -72,10 +72,23 @@ class Employee < A
     source: :favoritable,
     source_type: "Dock",
     split: !NO_SPLIT
+
+  has_one :profile
+  has_many :profile_pins, -> { ordered_by_position }, through: :profile
+  has_many :pinned_ships,
+    through: :profile_pins,
+    source: :pinned_item,
+    source_type: "Ship",
+    split: !NO_SPLIT
 end
 
 class Whistle < A
   belongs_to :ship # C
+end
+
+class Profile < A
+  belongs_to :employee # C
+  has_many :profile_pins
 end
 
 class Dock < B
@@ -90,10 +103,19 @@ class Favorite < B
   belongs_to :favoritable, polymorphic: true
 end
 
+class ProfilePin < B
+  scope :ordered_by_position, -> { order("profile_pins.position ASC") }
+
+  belongs_to :profile
+  has_one :employee, through: :profile
+  belongs_to :pinned_item, polymorphic: true
+end
+
 class Ship < C
   belongs_to :dock # B
   has_many :whistles # A
   has_many :favorites, as: :favoritable #B
+  has_many :profile_pins, as: :pinned_item
   has_many :containers,
     foreign_key: "container_registration_number_id",
     through: :dock,
