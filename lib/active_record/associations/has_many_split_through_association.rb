@@ -6,7 +6,7 @@ module ActiveRecord
       def scope(association)
         # source of the through reflection
         source_reflection = association.reflection
-        options = source_reflection.options
+        owner = association.owner
 
         # remove all previously set scopes of passed in association
         scope = association.klass.unscoped
@@ -15,7 +15,7 @@ module ActiveRecord
 
         reverse_chain = chain.reverse
         first_reflection = reverse_chain.shift
-        first_join_ids = [association.owner.id]
+        first_join_ids = [owner.id]
 
         initial_values = [first_reflection, first_join_ids]
 
@@ -25,7 +25,7 @@ module ActiveRecord
           # "WHERE key IN ()" is invalid SQL and will happen if join_ids is empty,
           # so we gotta catch it here in ruby
           record_ids = if join_ids.present?
-            records = add_reflection_constraints(reflection, key, join_ids, association.owner)
+            records = add_reflection_constraints(reflection, key, join_ids, owner)
 
             foreign_key = next_reflection.join_keys.foreign_key
             records.pluck(foreign_key)
@@ -39,7 +39,7 @@ module ActiveRecord
         if last_join_ids.present?
           key = last_reflection.join_keys.key
 
-          add_reflection_constraints(last_reflection, key, last_join_ids, association.owner)
+          add_reflection_constraints(last_reflection, key, last_join_ids, owner)
         else
           last_reflection.klass.none
         end
