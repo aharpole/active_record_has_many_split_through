@@ -121,6 +121,10 @@ class ActiveRecordHasManySplitThroughTest < Minitest::Test
     assert_equal [@dock, @dock2], @employee.favorite_docks
   end
 
+  def test_has_one_through_a_through
+    assert_equal @ship, @employee.pinned_ships.first
+  end
+
   private
 
   def create_fixtures
@@ -158,6 +162,9 @@ class ActiveRecordHasManySplitThroughTest < Minitest::Test
     @employee.favorite_ships << @ship2
     @employee.favorite_docks << @dock
     @employee.favorite_docks << @dock2
+
+    @profile = @employee.create_profile!()
+    @profile_pin = ProfilePin.create!(pinned_item: @ship, profile: @profile)
   end
 
   def remove_everything
@@ -169,6 +176,8 @@ class ActiveRecordHasManySplitThroughTest < Minitest::Test
     Whistle.connection.execute("delete from whistles;")
     Container.connection.execute("delete from containers;")
     Favorite.connection.execute("delete from favorites;")
+    Profile.connection.execute("delete from profiles;")
+    ProfilePin.connection.execute("delete from profile_pins;")
   end
 
   def assert_difference(record_count)
