@@ -27,14 +27,6 @@ module ActiveRecord
           record_ids = if join_ids.present?
             records = add_reflection_constraints(reflection, key, join_ids, association.owner)
 
-            if options[:source_type]
-              table = reflection.aliased_table
-              type = "#{options[:source]}_type"
-              polymorphic_type = transform_value(options[:source_type])
-
-              records = apply_scope(records, table, type, polymorphic_type)
-            end
-
             foreign_key = next_reflection.join_keys.foreign_key
             records.pluck(foreign_key)
           else
@@ -64,9 +56,16 @@ module ActiveRecord
 
         def add_reflection_constraints(reflection, key, join_ids, owner)
           scope = reflection.klass.where(key => join_ids)
-          reflection.constraints.inject(scope) do |memo, scope_chain_item|
+          scope = reflection.constraints.inject(scope) do |memo, scope_chain_item|
             select_reflection_constraints(reflection, scope_chain_item, owner, memo)
           end
+
+          if reflection.type
+           polymorphic_type = transform_value(owner.class.polymorphic_name)
+           scope = apply_scope(scope, reflection.aliased_table, reflection.type, polymorphic_type)
+          end
+
+          scope
         end
     end
 
