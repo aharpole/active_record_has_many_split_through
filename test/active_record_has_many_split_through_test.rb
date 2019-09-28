@@ -101,7 +101,28 @@ class ActiveRecordHasManySplitThroughTest < Minitest::Test
   end
 
   def test_count_through_a_through
-    assert_equal 3, @company.whistles.count
+    assert_equal 5, @company.whistles.count
+  end
+
+  # through test test with scope
+
+  def test_counting_through_other_database_using_relation_with_scope
+    assert_equal 2, @company.broken_whistles.count
+  end
+
+  def test_to_a_through_other_database_with_multiple_scopes
+    assert_equal [@broken_whistle2, @broken_whistle1], @company.broken_whistles.to_a
+  end
+
+  # through test with polymorphic relations
+
+  def test_employee_has_favorites
+    assert_equal [@ship2], @employee.favorite_ships
+    assert_equal [@dock, @dock2], @employee.favorite_docks
+  end
+
+  def test_has_one_through_a_through
+    assert_equal @ship, @employee.pinned_ships.first
   end
 
   private
@@ -131,13 +152,19 @@ class ActiveRecordHasManySplitThroughTest < Minitest::Test
     @ship.whistles.create!()
     @ship.whistles.create!()
     @ship.whistles.create!()
+    @broken_whistle1 = @ship.whistles.create!(broken: true)
+    @broken_whistle2 = @ship.whistles.create!(broken: true)
 
     @ship2.whistles.create!()
     @ship2.whistles.create!()
+    @broken_whistle3 = @ship2.whistles.create!(broken: true)
 
-    @favorite_ship = Favorite.create!(employee: @employee, favoritable: @ship2)
-    @favorite_dock = Favorite.create!(employee: @employee, favoritable: @dock)
-    @decoy_ship = Ship.where(id: @favorite_dock.id).first_or_create
+    @employee.favorite_ships << @ship2
+    @employee.favorite_docks << @dock
+    @employee.favorite_docks << @dock2
+
+    @profile = @employee.create_profile!()
+    @profile_pin = ProfilePin.create!(pinned_item: @ship, profile: @profile)
   end
 
   def remove_everything
@@ -149,6 +176,8 @@ class ActiveRecordHasManySplitThroughTest < Minitest::Test
     Whistle.connection.execute("delete from whistles;")
     Container.connection.execute("delete from containers;")
     Favorite.connection.execute("delete from favorites;")
+    Profile.connection.execute("delete from profiles;")
+    ProfilePin.connection.execute("delete from profile_pins;")
   end
 
   def assert_difference(record_count)

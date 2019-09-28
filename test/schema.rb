@@ -15,7 +15,12 @@ A.connection.create_table :employees, force: true do |t|
 end
 
 A.connection.create_table :whistles, force: true do |t|
+  t.boolean :broken, default: false
   t.references :ship
+end
+
+A.connection.create_table :profiles, force: true do |t|
+  t.references :employee
 end
 
 B.connection.create_table :docks, force: true do |t|
@@ -24,9 +29,14 @@ B.connection.create_table :docks, force: true do |t|
 end
 
 B.connection.create_table :favorites, force: true do |t|
-  t.integer :favoritable_id
-  t.integer :employee_id
-  t.string  :favoritable_type
+  t.references :favoritable, polymorphic: true
+  t.references :employee
+end
+
+B.connection.create_table :profile_pins, force: true do |t|
+  t.references :pinned_item, polymorphic: true
+  t.references :profile
+  t.integer :position, null: false, default: 1
 end
 
 C.connection.create_table :ships, force: true do |t|
