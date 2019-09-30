@@ -126,6 +126,10 @@ class ActiveRecordHasManySplitThroughTest < Minitest::Test
     assert_includes @employee.pinned_ships.to_a, @ship, @ship2
   end
 
+  def test_ordering_scopes_apply_to_throughs
+    assert_equal [@ship2, @ship], @employee.pinned_ships.to_a
+  end
+
   private
 
   def create_fixtures
