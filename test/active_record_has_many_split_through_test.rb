@@ -164,7 +164,9 @@ class ActiveRecordHasManySplitThroughTest < Minitest::Test
     @employee.favorite_docks << @dock2
 
     @profile = @employee.create_profile!()
-    @profile_pin = ProfilePin.create!(pinned_item: @ship, profile: @profile)
+    # position is backwards in case records are returned in creation order
+    @profile_pin1 = ProfilePin.create!(pinned_item: @ship, profile: @profile, position: 2)
+    @profile_pin2 = ProfilePin.create!(pinned_item: @ship2, profile: @profile, position: 1)
   end
 
   def remove_everything
