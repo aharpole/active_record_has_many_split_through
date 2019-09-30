@@ -122,7 +122,8 @@ class ActiveRecordHasManySplitThroughTest < Minitest::Test
   end
 
   def test_has_one_through_a_through
-    assert_equal @ship, @employee.pinned_ships.first
+    assert_equal @employee.pinned_ships.count, 2
+    assert_includes @employee.pinned_ships.to_a, @ship, @ship2
   end
 
   private
