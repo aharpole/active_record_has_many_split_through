@@ -23,8 +23,8 @@ GEM
     i18n (1.6.0)
       concurrent-ruby (~> 1.0)
     minitest (5.11.3)
+    mysql2 (0.5.2)
     rake (10.5.0)
-    sqlite3 (1.4.1)
     thread_safe (0.3.6)
     tzinfo (1.2.5)
       thread_safe (~> 0.1)
@@ -38,8 +38,8 @@ DEPENDENCIES
   bundler (~> 1.17)
   byebug (~> 10.0)
   minitest (~> 5.0)
+  mysql2 (>= 0.4.10)
   rake (~> 10.0)
-  sqlite3 (~> 1.4)
 
 BUNDLED WITH
    1.17.2

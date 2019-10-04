@@ -1,0 +1,22 @@
+setup: &setup
+  adapter: mysql2
+  username: root
+  password:
+  host: 127.0.0.1
+<% if ENV['GEM_CI'] %>
+  port: 32768
+<% end %>
+
+default_env:
+  database_a:
+    <<: *setup
+    database: database_a
+  database_b:
+    <<: *setup
+    database: database_b
+  database_c:
+    <<: *setup
+    database: database_c
+  database_d:
+    <<: *setup
+    database: database_d
