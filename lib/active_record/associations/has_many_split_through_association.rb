@@ -89,8 +89,8 @@ module ActiveRecord
           end
 
           if reflection.type
-           polymorphic_type = transform_value(owner.class.polymorphic_name)
-           scope = apply_scope(scope, reflection.aliased_table, reflection.type, polymorphic_type)
+            polymorphic_type = transform_value(owner.class.polymorphic_name)
+            scope = apply_scope(scope, reflection.aliased_table, reflection.type, polymorphic_type)
           end
 
           if ordered
