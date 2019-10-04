@@ -130,6 +130,18 @@ class ActiveRecordHasManySplitThroughTest < Minitest::Test
     assert_equal [@ship2, @ship], @employee.pinned_ships.to_a
   end
 
+  if ENV["NO_SPLIT"]
+    def test_joined_ordereing_returns_duplicates
+      ProfilePin.create!(pinned_item: @ship2, profile: @profile, position: 3)
+      assert_equal [@ship2, @ship, @ship2], @employee.pinned_ships.to_a
+    end
+  else
+    def test_joined_ordering_returns_no_duplicates
+      ProfilePin.create!(pinned_item: @ship2, profile: @profile, position: 3)
+      assert_equal [@ship2, @ship], @employee.pinned_ships.to_a
+    end
+  end
+
   private
 
   def create_fixtures
