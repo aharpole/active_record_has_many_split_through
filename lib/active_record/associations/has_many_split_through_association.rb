@@ -48,16 +48,10 @@ module ActiveRecord
         last_reflection, last_ordered, last_join_ids = reverse_chain.inject(initial_values) do |(reflection, ordered, join_ids), next_reflection|
           key = reflection.join_keys.key
 
-          # "WHERE key IN ()" is invalid SQL and will happen if join_ids is empty,
-          # so we gotta catch it here in ruby
-          record_ids = if join_ids.present?
-            records = add_reflection_constraints(reflection, key, join_ids, owner, ordered)
+          records = add_reflection_constraints(reflection, key, join_ids, owner, ordered)
 
-            foreign_key = next_reflection.join_keys.foreign_key
-            records.pluck(foreign_key)
-          else
-            []
-          end
+          foreign_key = next_reflection.join_keys.foreign_key
+          record_ids = records.pluck(foreign_key)
 
           records_ordered = records && records.order_values.any?
 
