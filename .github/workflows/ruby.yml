@@ -7,6 +7,14 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+        ports:
+        - 3306
+
     strategy:
       matrix:
         task: [ test, test_with_split, test_without_split ]
@@ -16,9 +24,22 @@ jobs:
       uses: actions/setup-ruby@v1
       with:
         ruby-version: 2.6.x
-    - name: Install SQLite3 Libraries
+    - name: Install MySQL Libraries
       run: |
-        sudo apt-get install sqlite3 libsqlite3-dev
+        sudo apt-get install -y mysql-client libmysqlclient-dev
+        mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports[3306] }} -uroot -e "SHOW GRANTS FOR 'root'@'localhost'"
+
+    - name: Setup Databases
+      run: |
+        mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports[3306] }} -uroot -e "grant all privileges on database_a.* to root;"
+        mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports[3306] }} -uroot -e "grant all privileges on database_b.* to root;"
+        mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports[3306] }} -uroot -e "grant all privileges on database_c.* to root;"
+        mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports[3306] }} -uroot -e "grant all privileges on database_d.* to root;"
+        mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports[3306] }} -uroot -e "create database database_a default character set utf8mb4;"
+        mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports[3306] }} -uroot -e "create database database_b default character set utf8mb4;"
+        mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports[3306] }} -uroot -e "create database database_c default character set utf8mb4;"
+        mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports[3306] }} -uroot -e "create database database_d default character set utf8mb4;"
+
     - name: Install Gel
       run: |
         gem install gel
@@ -26,5 +47,7 @@ jobs:
       run: |
         gel install
     - name: Run tests
+      env:
+        GEM_CI: 1
       run: |
         gel exec rake ${{ matrix.task }}

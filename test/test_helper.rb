@@ -1,8 +1,12 @@
 $LOAD_PATH.unshift File.expand_path("../../lib", __FILE__)
 require "active_record_has_many_split_through"
 require "minitest/autorun"
+require "erb"
 
-ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: ':memory:')
+yaml_file = File.open('config/database.yml')
+config_file = YAML.load(ERB.new(yaml_file.read).result)
+ActiveRecord::Base.configurations = config_file
+ActiveRecord::Base.establish_connection(:database_a)
 ActiveRecord::Schema.verbose = false
 
 #ActiveRecord::Base.logger = Logger.new($stderr)
@@ -16,7 +20,7 @@ class B < ActiveRecord:: Base
   self.abstract_class = true
 
   unless NO_SPLIT
-    establish_connection(adapter: 'sqlite3', database: ':memory:')
+    establish_connection(:database_b)
   end
 end
 
@@ -24,7 +28,7 @@ class C < ActiveRecord:: Base
   self.abstract_class = true
 
   unless NO_SPLIT
-    establish_connection(adapter: 'sqlite3', database: ':memory:')
+    establish_connection(:database_c)
   end
 end
 
@@ -32,7 +36,7 @@ class D < ActiveRecord:: Base
   self.abstract_class = true
 
   unless NO_SPLIT
-    establish_connection(adapter: 'sqlite3', database: ':memory:')
+    establish_connection(:database_d)
   end
 end
 
@@ -127,4 +131,14 @@ class Container < D
   belongs_to :dock # B
 end
 
-require_relative "schema"
+begin
+  require_relative "schema"
+rescue ActiveRecord::NoDatabaseError
+  puts "===================================================================================="
+  puts "\n"
+  puts "The database does not exist."
+  puts "Please run `bin/rake db:create` to create the database."
+  puts "\n"
+  puts "===================================================================================="
+  exit!
+end
