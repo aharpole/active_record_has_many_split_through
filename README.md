@@ -1,6 +1,10 @@
 # HasManySplitThrough association for ActiveRecord
 
-Don't use joins 
+Don't use joins.
+
+## **Important note about duplicates**
+
+By default, `ActiveRecord` could return duplicate record objects if there exists multiple join records. This is a result of how MySQL JOINs work. This gem does not emulate this behavior and instead works **as if `-> { distinct }` is always present** in the association. If you notice you have mismatches or test failures related to duplicates, then you are advised to first migrate your association to use `-> { distinct }` before using this gem to `split: true` the association.
 
 ## Installation
 
