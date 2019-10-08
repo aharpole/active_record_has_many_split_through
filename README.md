@@ -11,7 +11,7 @@ By default, `ActiveRecord` could return duplicate record objects if there exists
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'active_record_has_many_split_through', github: 'myobie/active_record_has_many_split_through'
+gem 'active_record_has_many_split_through', github: 'github/active_record_has_many_split_through'
 ```
 
 And then execute:
