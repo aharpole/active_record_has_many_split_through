@@ -122,7 +122,24 @@ class ActiveRecordHasManySplitThroughTest < Minitest::Test
   end
 
   def test_has_one_through_a_through
-    assert_equal @ship, @employee.pinned_ships.first
+    assert_equal @employee.pinned_ships.count, 2
+    assert_includes @employee.pinned_ships.to_a, @ship, @ship2
+  end
+
+  def test_ordering_scopes_apply_to_throughs
+    assert_equal [@ship2, @ship], @employee.pinned_ships.to_a
+  end
+
+  if ENV["NO_SPLIT"]
+    def test_joined_ordereing_returns_duplicates
+      ProfilePin.create!(pinned_item: @ship2, profile: @profile, position: 3)
+      assert_equal [@ship2, @ship, @ship2], @employee.pinned_ships.to_a
+    end
+  else
+    def test_joined_ordering_returns_no_duplicates
+      ProfilePin.create!(pinned_item: @ship2, profile: @profile, position: 3)
+      assert_equal [@ship2, @ship], @employee.pinned_ships.to_a
+    end
   end
 
   private
@@ -164,7 +181,9 @@ class ActiveRecordHasManySplitThroughTest < Minitest::Test
     @employee.favorite_docks << @dock2
 
     @profile = @employee.create_profile!()
-    @profile_pin = ProfilePin.create!(pinned_item: @ship, profile: @profile)
+    # position is backwards in case records are returned in creation order
+    @profile_pin1 = ProfilePin.create!(pinned_item: @ship, profile: @profile, position: 2)
+    @profile_pin2 = ProfilePin.create!(pinned_item: @ship2, profile: @profile, position: 1)
   end
 
   def remove_everything

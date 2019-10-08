@@ -3,6 +3,32 @@
 module ActiveRecord
   module Associations
     class SplitAssociationScope < AssociationScope
+      class OrderedScope < DelegateClass(ActiveRecord::Relation)
+        TOO_MANY_RECORDS = 5000
+
+        def initialize(scope, key, ids)
+          @ids = ids.uniq
+          @key = key
+          super(scope)
+        end
+
+        def to_a
+          records = super
+
+          if records.length > TOO_MANY_RECORDS
+            warn("You've requested to order #{records.length} in memory. This may have an impact on the performance of this query. Use with caution.")
+          end
+
+          records_by_id = records.group_by do |record|
+            record[@key]
+          end
+
+          records = @ids.flat_map { |id| records_by_id[id] }
+          records.compact!
+          records
+        end
+      end
+
       def scope(association)
         # source of the through reflection
         source_reflection = association.reflection
@@ -17,29 +43,25 @@ module ActiveRecord
         first_reflection = reverse_chain.shift
         first_join_ids = [owner.id]
 
-        initial_values = [first_reflection, first_join_ids]
+        initial_values = [first_reflection, false, first_join_ids]
 
-        last_reflection, last_join_ids = reverse_chain.inject(initial_values) do |(reflection, join_ids), next_reflection|
+        last_reflection, last_ordered, last_join_ids = reverse_chain.inject(initial_values) do |(reflection, ordered, join_ids), next_reflection|
           key = reflection.join_keys.key
 
-          # "WHERE key IN ()" is invalid SQL and will happen if join_ids is empty,
-          # so we gotta catch it here in ruby
-          record_ids = if join_ids.present?
-            records = add_reflection_constraints(reflection, key, join_ids, owner)
+          records = add_reflection_constraints(reflection, key, join_ids, owner, ordered)
 
-            foreign_key = next_reflection.join_keys.foreign_key
-            records.pluck(foreign_key)
-          else
-            []
-          end
+          foreign_key = next_reflection.join_keys.foreign_key
+          record_ids = records.pluck(foreign_key)
 
-          [next_reflection, record_ids]
+          records_ordered = records && records.order_values.any?
+
+          [next_reflection, records_ordered, record_ids]
         end
 
         if last_join_ids.present?
           key = last_reflection.join_keys.key
 
-          add_reflection_constraints(last_reflection, key, last_join_ids, owner)
+          add_reflection_constraints(last_reflection, key, last_join_ids, owner, last_ordered)
         else
           last_reflection.klass.none
         end
@@ -54,18 +76,22 @@ module ActiveRecord
           scope
         end
 
-        def add_reflection_constraints(reflection, key, join_ids, owner)
+        def add_reflection_constraints(reflection, key, join_ids, owner, ordered)
           scope = reflection.klass.where(key => join_ids)
           scope = reflection.constraints.inject(scope) do |memo, scope_chain_item|
             select_reflection_constraints(reflection, scope_chain_item, owner, memo)
           end
 
           if reflection.type
-           polymorphic_type = transform_value(owner.class.polymorphic_name)
-           scope = apply_scope(scope, reflection.aliased_table, reflection.type, polymorphic_type)
+            polymorphic_type = transform_value(owner.class.polymorphic_name)
+            scope = apply_scope(scope, reflection.aliased_table, reflection.type, polymorphic_type)
           end
 
-          scope
+          if ordered
+            OrderedScope.new(scope, key, join_ids)
+          else
+            scope
+          end
         end
     end
 
