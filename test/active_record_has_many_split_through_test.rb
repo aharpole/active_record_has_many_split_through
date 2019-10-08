@@ -142,6 +142,10 @@ class ActiveRecordHasManySplitThroughTest < Minitest::Test
     end
   end
 
+  def test_order_is_applied_from_has_many_rather_than_join
+    assert_equal [@ship, @ship2], @employee.pinned_ships_ordered.to_a
+  end
+
   private
 
   def create_fixtures
