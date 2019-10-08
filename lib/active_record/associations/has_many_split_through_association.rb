@@ -87,7 +87,7 @@ module ActiveRecord
             scope = apply_scope(scope, reflection.aliased_table, reflection.type, polymorphic_type)
           end
 
-          if ordered
+          if scope.order_values.empty? && ordered
             OrderedScope.new(scope, key, join_ids)
           else
             scope

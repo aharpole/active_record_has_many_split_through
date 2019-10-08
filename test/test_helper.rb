@@ -84,6 +84,13 @@ class Employee < A
     source: :pinned_item,
     source_type: "Ship",
     split: !NO_SPLIT
+
+  has_many :pinned_ships_ordered,
+    -> { order("id ASC") },
+    through: :profile_pins,
+    source: :pinned_item,
+    source_type: "Ship",
+    split: !NO_SPLIT
 end
 
 class Whistle < A
