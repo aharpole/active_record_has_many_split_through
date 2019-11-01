@@ -145,6 +145,11 @@ class ActiveRecordHasManySplitThroughTest < Minitest::Test
   def test_order_is_applied_from_has_many_rather_than_join
     assert_equal [@ship, @ship2], @employee.pinned_ships_ordered.to_a
   end
+  
+  def test_preloading_hmt_works
+    relation = ShippingCompany.all.preload(:ships)
+    relation.to_a
+  end
 
   private
 
